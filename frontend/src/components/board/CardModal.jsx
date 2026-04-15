@@ -124,7 +124,7 @@ const handleSave = async () => {
 
       <div
         onClick={onClose}
-        className="fixed left-0 w-full z-[9999] backdrop-blur-sm bg-black/30 flex justify-center fadeIn"
+        className="fixed left-0 w-full z-9999 backdrop-blur-sm bg-black/30 flex justify-center fadeIn"
         style={{
           top: HEADER_HEIGHT,
           height: `calc(100vh - ${HEADER_HEIGHT})`,
@@ -305,7 +305,7 @@ const handleSave = async () => {
             <button
               onClick={handleSave}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#7c3aed] to-[#6d28d9] text-white py-3 rounded-2xl text-lg shadow-md hover:shadow-xl hover:scale-[1.01] transition"
+              className="w-full bg-linear-to-r from-[#7c3aed] to-[#6d28d9] text-white py-3 rounded-2xl text-lg shadow-md hover:shadow-xl hover:scale-[1.01] transition"
             >
               {loading ? "Saving..." : "Save Changes"}
             </button>

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { X, Settings } from "lucide-react";
 import {
   createList,
-  getListsByBoard,
   deleteList,
 } from "../../../services/listService";
+import { getBoardById } from "../../../services/boardService";
 import List from "../../board/List";
 import AddListBlock from "../../board/AddListBlock";
 import { moveCard } from "../../../services/cardService";
@@ -12,42 +12,36 @@ import { moveCard } from "../../../services/cardService";
 const BoardBlock = ({ board, onRemove }) => {
   const [lists, setLists] = useState([]);
 
-  // 🔥 NEW: refresh trigger
-  const [refreshKey, setRefreshKey] = useState(0);
-
   useEffect(() => {
-    fetchLists();
+    fetchBoard();
   }, [board._id]);
 
-  const fetchLists = async () => {
+  const fetchBoard = async () => {
     try {
-      const data = await getListsByBoard(board._id);
-      setLists(data);
+      const data = await getBoardById(board._id);
+      setLists(data.lists || []);
     } catch (err) {
       console.error(err);
     }
   };
 
-  // 🔥 CROSS LIST DRAG (FIXED)
+  // 🔥 DRAG HANDLER
   const handleCrossListDrop = async ({
     cardId,
     sourceListId,
     destinationListId,
+    sourceIndex,
+    destinationIndex,
   }) => {
     try {
-      if (!cardId || sourceListId === destinationListId) return;
-
-      // ✅ BACKEND UPDATE
       await moveCard(cardId, {
         sourceListId,
         destinationListId,
-        sourceIndex: 0,
-        destinationIndex: 0,
+        sourceIndex,
+        destinationIndex,
       });
 
-      // 🔥 FORCE RE-RENDER OF ALL LISTS
-      setRefreshKey((prev) => prev + 1);
-
+      fetchBoard(); // ✅ single source of truth
     } catch (err) {
       console.error(err);
     }
@@ -55,12 +49,12 @@ const BoardBlock = ({ board, onRemove }) => {
 
   const handleCreateList = async (title) => {
     try {
-      const newList = await createList({
+      await createList({
         title,
         boardId: board._id,
       });
 
-      setLists((prev) => [...prev, newList]);
+      fetchBoard();
     } catch (err) {
       console.error(err);
     }
@@ -75,11 +69,53 @@ const BoardBlock = ({ board, onRemove }) => {
     }
   };
 
+  const handleUpdateListLocal = (updatedList) => {
+    setLists((prev) =>
+      prev.map((l) =>
+        l._id === updatedList._id ? updatedList : l
+      )
+    );
+  };
+
+  const handleUpdateCardLocal = (listId, updatedCard) => {
+  setLists((prev) =>
+    prev.map((list) => {
+      if (list._id !== listId) return list;
+
+      const exists = list.cards.some(
+        (c) => c._id === updatedCard._id
+      );
+
+      return {
+        ...list,
+        cards: exists
+          ? list.cards.map((c) =>
+              c._id === updatedCard._id ? updatedCard : c
+            )
+          : [...list.cards, updatedCard], // ✅ ADD NEW CARD
+      };
+    })
+  );
+};
+
+  const handleDeleteCardLocal = (listId, cardId) => {
+    setLists((prev) =>
+      prev.map((list) => {
+        if (list._id !== listId) return list;
+
+        return {
+          ...list,
+          cards: list.cards.filter((c) => c._id !== cardId),
+        };
+      })
+    );
+  };
+
   return (
     <div className="w-full h-full bg-white rounded-2xl shadow-md border border-[#ede9fe] flex flex-col relative overflow-visible">
-      
+
       {/* HEADER */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#ede9fe] top-0 bg-white z-10 rounded-t-2xl">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#ede9fe] bg-white z-10 rounded-t-2xl">
         <h2 className="text-lg font-semibold text-[#1e1b4b] truncate">
           {board.title}
         </h2>
@@ -98,28 +134,27 @@ const BoardBlock = ({ board, onRemove }) => {
         </div>
       </div>
 
-      {/* LIST CONTAINER */}
-      <div className="flex-1 overflow-x-auto overflow-y-visible no-scrollbar relative">
-        
+      {/* LISTS */}
+      <div className="flex-1 overflow-x-auto overflow-y-visible no-scrollbar">
         <div className="flex items-start gap-4 p-4 min-w-max">
-          
+
           {lists.map((list) => (
             <List
-              key={list._id + refreshKey} // 🔥 FIX: force remount
+              key={list._id}
               list={list}
+              cards={list.cards || []} // 🔥 IMPORTANT
               onDelete={handleDeleteList}
+              onUpdate={handleUpdateListLocal}
               onCardDropFromOutside={handleCrossListDrop}
-              onUpdate={(updatedList) => {
-                setLists((prev) =>
-                  prev.map((l) =>
-                    l._id === updatedList._id ? updatedList : l
-                  )
-                );
-              }}
+              onCardUpdate={(card) =>
+                handleUpdateCardLocal(list._id, card)
+              }
+              onCardDelete={(cardId) =>
+                handleDeleteCardLocal(list._id, cardId)
+              }
             />
           ))}
 
-          {/* ADD LIST */}
           <AddListBlock onCreate={handleCreateList} />
 
         </div>

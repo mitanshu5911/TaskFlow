@@ -1,9 +1,20 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { MoreHorizontal, Pencil, Trash2, Archive, Check } from "lucide-react";
-import { archiveCard, deleteCard, toggleCardComplete } from "../../services/cardService";
+import { MoreHorizontal, Trash2, Archive, Check } from "lucide-react";
+import {
+  archiveCard,
+  deleteCard,
+  toggleCardComplete,
+} from "../../services/cardService";
 
-const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
+const Card = ({
+  card,
+  index,          // ✅ FIXED
+  listId,         // ✅ FIXED
+  onDelete,
+  onOpen,
+  onUpdate,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [completed, setCompleted] = useState(card.isCompleted || false);
@@ -12,7 +23,7 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
   const menuRef = useRef();
   const buttonRef = useRef();
 
-  // 🔥 FIX: ensure completed stays in sync if parent updates
+  // ✅ Sync completed state
   useEffect(() => {
     setCompleted(card.isCompleted || false);
   }, [card.isCompleted]);
@@ -40,7 +51,6 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
 
     try {
       setLoading(true);
-
       const updated = await toggleCardComplete(card._id);
 
       setCompleted(updated.isCompleted);
@@ -52,6 +62,7 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
     }
   };
 
+  // ✅ Delete
   const handleDelete = async (e) => {
     e.stopPropagation();
 
@@ -65,12 +76,12 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
     }
   };
 
+  // ✅ Archive
   const handleArchive = async (e) => {
     e.stopPropagation();
 
     try {
       const updated = await archiveCard(card._id);
-
       onDelete && onDelete(card._id);
       onUpdate && onUpdate(updated);
     } catch (err) {
@@ -86,25 +97,16 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
       onDragStart={(e) => {
         e.stopPropagation();
 
-        // 🔥 FIX: ensure correct list id
-        const sourceListId = typeof card.list === "object"
-          ? card.list._id
-          : card.list;
-
+        // ✅ CLEAN & RELIABLE DATA
         e.dataTransfer.setData("cardId", card._id);
-        e.dataTransfer.setData("sourceListId", sourceListId);
+        e.dataTransfer.setData("sourceListId", listId);
+        e.dataTransfer.setData("sourceIndex", index);
 
-        // 🔥 drag effect
+        // 🔥 visual feedback
         e.currentTarget.classList.add("opacity-50", "scale-95");
       }}
       onDragEnd={(e) => {
-        // 🔥 CLEANUP
         e.currentTarget.classList.remove("opacity-50", "scale-95");
-      }}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop && onDrop(card._id, e);
       }}
       onClick={() => onOpen(card)}
       className={`relative group rounded-xl p-3 shadow-sm border cursor-pointer
@@ -136,13 +138,19 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
         {completed && <Check size={12} className="text-white" />}
       </button>
 
+      {/* TITLE */}
       <p
         className={`text-sm font-medium transition-all duration-200 group-hover:mx-7
-          ${completed ? "line-through text-gray-400 mx-7" : "text-[#1e1b4b]"}`}
+          ${
+            completed
+              ? "line-through text-gray-400 mx-7"
+              : "text-[#1e1b4b]"
+          }`}
       >
         {card.title}
       </p>
 
+      {/* MENU BUTTON */}
       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
         <button
           ref={buttonRef}
@@ -164,7 +172,7 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
         </button>
       </div>
 
-      {/* ✅ DROPDOWN MENU */}
+      {/* ✅ DROPDOWN MENU (UNCHANGED) */}
       {menuOpen &&
         createPortal(
           <div

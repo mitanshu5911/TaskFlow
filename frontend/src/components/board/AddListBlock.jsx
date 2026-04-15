@@ -26,7 +26,7 @@ const AddListBlock = ({ onCreate }) => {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="min-w-[270px] h-fit bg-[#ede9fe] hover:bg-[#ddd6fe] text-[#1e1b4b] 
+        className="min-w-67.5 h-fit bg-[#ede9fe] hover:bg-[#ddd6fe] text-[#1e1b4b] 
                    rounded-xl p-3 text-sm text-left transition"
       >
         + Add another list
@@ -36,7 +36,7 @@ const AddListBlock = ({ onCreate }) => {
 
   // 👉 OPEN STATE
   return (
-    <div className="min-w-[270px] bg-white rounded-xl p-3 shadow-md border border-[#ddd6fe]">
+    <div className="min-w-67.5 bg-white rounded-xl p-3 shadow-md border border-[#ddd6fe]">
 
       <input
         type="text"
