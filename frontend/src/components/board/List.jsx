@@ -4,7 +4,7 @@ import AddCardBlock from "./AddCardBlock";
 import { createCard, getFilteredCards } from "../../services/cardService";
 import { updateList } from "../../services/listService";
 import CardModal from "./CardModal";
-import Card from "./Card.jsx";
+import Card from "./card.jsx";
 
 const LABELS = [
   { name: "Feature", color: "#7c3aed" },
