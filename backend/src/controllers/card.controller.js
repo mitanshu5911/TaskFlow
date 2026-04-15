@@ -1,4 +1,6 @@
 import Card from "../models/Card.js";
+import User from "../models/User.js";
+import mongoose from "mongoose";
 
 
 // ✅ CREATE CARD
@@ -32,16 +34,28 @@ export const createCard = async (req, res) => {
 
 
 
-// ✅ UPDATE CARD
+
+
+
 export const updateCard = async (req, res) => {
   try {
+    const { id } = req.params;
+
+    // 🔥 VALIDATE CARD ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        message: "Invalid card ID",
+      });
+    }
+
     const allowedUpdates = [
       "title",
       "description",
       "labels",
       "members",
       "dueDate",
-      "checklist",
+      "attachments",
+      "isCompleted",
     ];
 
     const updates = {};
@@ -52,11 +66,76 @@ export const updateCard = async (req, res) => {
       }
     });
 
-    const card = await Card.findByIdAndUpdate(
-      req.params.id,
-      updates,
-      { new: true }
-    );
+    if (updates.title !== undefined) {
+      if (!updates.title.trim()) {
+        return res.status(400).json({
+          message: "Title cannot be empty",
+        });
+      }
+      updates.title = updates.title.trim();
+    }
+
+    if (updates.description !== undefined) {
+      updates.description = updates.description.trim();
+    }
+
+    if (updates.dueDate !== undefined) {
+      const date = new Date(updates.dueDate);
+      if (isNaN(date.getTime())) {
+        return res.status(400).json({
+          message: "Invalid due date",
+        });
+      }
+      updates.dueDate = date;
+    }
+
+    if (updates.labels !== undefined) {
+      if (!Array.isArray(updates.labels)) {
+        return res.status(400).json({
+          message: "Labels must be an array",
+        });
+      }
+
+      updates.labels = updates.labels.map((label) => ({
+        name: label.name?.trim() || "Label",
+        color: label.color || "#7c3aed",
+      }));
+    }
+
+    if (updates.members !== undefined) {
+      if (!Array.isArray(updates.members)) {
+        return res.status(400).json({
+          message: "Members must be an array",
+        });
+      }
+
+      const users = await User.find({
+        email: { $in: updates.members },
+      }).select("_id email");
+
+      const userIds = users.map((u) => u._id);
+
+      updates.members = [...new Set(userIds)]; 
+    }
+
+    if (updates.attachments !== undefined) {
+      if (!Array.isArray(updates.attachments)) {
+        return res.status(400).json({
+          message: "Attachments must be an array",
+        });
+      }
+
+      updates.attachments = updates.attachments.map((a) => ({
+        fileName: a.fileName || "file",
+        fileUrl: a.fileUrl,
+        uploadedAt: a.uploadedAt || new Date(),
+      }));
+    }
+
+    const card = await Card.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true,
+    }).populate("members", "email name"); 
 
     if (!card) {
       return res.status(404).json({
@@ -65,8 +144,14 @@ export const updateCard = async (req, res) => {
     }
 
     res.json(card);
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Update Card Error:", err);
+
+    res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 };
 
@@ -154,7 +239,7 @@ export const moveCard = async (req, res) => {
       )
     );
 
-    // Update source orders
+    
     await Promise.all(
       updatedSource.map((card, index) =>
         Card.findByIdAndUpdate(card._id, { order: index + 1 })
@@ -179,6 +264,57 @@ export const getCardsByList = async (req, res) => {
       .populate("members", "name email");
 
     res.json(cards);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const addAttachment = async (req, res) => {
+  try {
+    const { fileName, fileUrl } = req.body;
+
+    const card = await Card.findById(req.params.id);
+
+    if (!card) {
+      return res.status(404).json({ message: "Card not found" });
+    }
+
+    card.attachments.push({
+      fileName,
+      fileUrl,
+    });
+
+    await card.save();
+
+    res.json(card);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const toggleCardComplete = async (req, res) => {
+  try {
+    const card = await Card.findById(req.params.id);
+
+    if (!card) {
+      return res.status(404).json({ message: "Card not found" });
+    }
+
+    card.isCompleted = !card.isCompleted;
+
+    await card.save();
+
+    res.json(card);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const deleteCard = async (req, res) => {
+  try {
+    await Card.findByIdAndDelete(req.params.id);
+
+    res.json({ message: "Card deleted permanently" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

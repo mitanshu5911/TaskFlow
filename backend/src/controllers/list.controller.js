@@ -1,5 +1,5 @@
 import List from "../models/List.js";
-
+import Card from "../models/Card.js";
 
 export const createList = async (req, res) => {
   try {
@@ -37,15 +37,28 @@ export const updateList = async (req, res) => {
   }
 };
 
-
 export const deleteList = async (req, res) => {
   try {
-    await List.findByIdAndDelete(req.params.id);
-    res.json({ message: "List deleted" });
+    const listId = req.params.id;
+
+    await Card.deleteMany({ list: listId });
+
+    const list = await List.findByIdAndDelete(listId);
+
+    if (!list) {
+      return res.status(404).json({
+        message: "List not found",
+      });
+    }
+
+    res.json({
+      message: "List and its cards deleted successfully",
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 export const getListsByBoard = async (req, res) => {
   try {

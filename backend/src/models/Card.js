@@ -1,10 +1,13 @@
 import mongoose from "mongoose";
 
-const checklistItemSchema = new mongoose.Schema({
-  text: String,
-  isCompleted: {
-    type: Boolean,
-    default: false,
+
+
+const attachmentSchema = new mongoose.Schema({
+  fileName: String,
+  fileUrl: String,
+  uploadedAt: {
+    type: Date,
+    default: Date.now,
   },
 });
 
@@ -26,17 +29,20 @@ const cardSchema = new mongoose.Schema(
       required: true,
     },
 
-    
     order: {
       type: Number,
       required: true,
     },
 
-    
+    isCompleted: {
+  type: Boolean,
+  default: false,
+},
+
     labels: [
       {
         name: String,
-        color: String, 
+        color: String,
       },
     ],
 
@@ -47,14 +53,12 @@ const cardSchema = new mongoose.Schema(
       },
     ],
 
-    
     dueDate: {
       type: Date,
     },
 
-    
-    checklist: [checklistItemSchema],
 
+    attachments: [attachmentSchema],
 
     isArchived: {
       type: Boolean,
@@ -64,6 +68,4 @@ const cardSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Card = mongoose.model("Card", cardSchema);
-
-export default Card;
+export default mongoose.model("Card", cardSchema);

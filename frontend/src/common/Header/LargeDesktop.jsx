@@ -11,7 +11,7 @@ const LargeDesktop = () => {
     console.log("Search button clicked");
   };
   return (
-    <header className="sticky top-0 z-50 h-16 w-full bg-white border-b border-[#ddd6fe] px-6 flex items-center justify-between">
+    <header className="sticky top-0 z-10 h-16 w-full bg-white border-b border-[#ddd6fe] px-6 flex items-center justify-between">
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-1 cursor-pointer">
           <div className="relative w-8 h-8">

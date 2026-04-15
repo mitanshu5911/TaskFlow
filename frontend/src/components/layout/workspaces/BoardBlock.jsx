@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { X, Settings } from "lucide-react";
-import { createList, getListsByBoard } from "../../../services/listService";
+import { createList, getListsByBoard, deleteList } from "../../../services/listService";
 import List from "../../board/List";
 import AddListBlock from "../../board/AddListBlock";
 
@@ -33,6 +33,16 @@ const BoardBlock = ({ board, onRemove }) => {
     }
   };
 
+  const handleDeleteList = async (listId) => {
+    try {
+      await deleteList(listId);
+
+      setLists((prev) => prev.filter((l) => l._id !== listId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="w-full bg-white rounded-2xl shadow-md border border-[#ede9fe] flex flex-col">
 
@@ -55,20 +65,20 @@ const BoardBlock = ({ board, onRemove }) => {
         </div>
       </div>
 
-      {/* 🔥 FIXED SCROLL AREA */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden no-scrollbar">
-
-        {/* 🔥 REMOVE w-max */}
+      <div className="flex-1 overflow-x-auto overflow-y-visible no-scrollbar">
         <div className="flex gap-4 p-4 min-w-max">
 
           {lists.map((list) => (
-            <List key={list._id} list={list} />
+            <List
+              key={list._id}
+              list={list}
+              onDelete={handleDeleteList}
+            />
           ))}
 
           <AddListBlock onCreate={handleCreateList} />
 
         </div>
-
       </div>
 
     </div>

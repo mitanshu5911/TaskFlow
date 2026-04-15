@@ -5,6 +5,9 @@ import {
   archiveCard,
   moveCard,
   getCardsByList,
+  addAttachment,
+  toggleCardComplete,
+  deleteCard,
 } from "../controllers/card.controller.js";
 
 const router = express.Router();
@@ -14,10 +17,16 @@ router.post("/", createCard);
 
 router.put("/:id", updateCard);
 
-router.delete("/:id", archiveCard);
+
+router.delete("/:id", deleteCard);              // permanent delete
+router.patch("/:id/archive", archiveCard);
 
 router.patch("/:id/move", moveCard);
 
 router.get("/list/:listId", getCardsByList);
+
+router.post("/:id/attachment", addAttachment);
+
+router.patch("/:id/toggle-complete", toggleCardComplete);
 
 export default router;
