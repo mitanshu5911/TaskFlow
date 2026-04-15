@@ -4,7 +4,12 @@ import CreateBoardBlock from "./workspaces/CreateBoardBlock";
 import BoardBlock from "./workspaces/BoardBlock";
 import { useLocation, useNavigate } from "react-router-dom";
 
-const Workspace = ({ selectedBoards = [], onRemoveBoard }) => {
+const Workspace = ({
+  selectedBoards = [],
+  onRemoveBoard,
+  setBoards,
+  setSelectedBoards,
+}) => {
   const [showCreate, setShowCreate] = useState(false);
 
   const location = useLocation();
@@ -17,9 +22,25 @@ const Workspace = ({ selectedBoards = [], onRemoveBoard }) => {
     }
   }, [location.state, navigate]);
 
+  // 🔥 FIXED CREATE FUNCTION
   const handleCreateBoard = async (title) => {
     try {
-      await createBoard({ title });
+      const newBoard = await createBoard({ title });
+
+      // ✅ Update Sidebar instantly
+      setBoards((prev) => [newBoard, ...prev]);
+
+      // ✅ Open board immediately + persist
+      setSelectedBoards((prev) => {
+        const updated = [
+          newBoard,
+          ...prev.filter((b) => b._id !== newBoard._id),
+        ];
+
+        localStorage.setItem("selectedBoards", JSON.stringify(updated));
+        return updated;
+      });
+
       setShowCreate(false);
     } catch (err) {
       console.error(err);
@@ -29,6 +50,7 @@ const Workspace = ({ selectedBoards = [], onRemoveBoard }) => {
   return (
     <div className="h-full w-full flex flex-col gap-4 overflow-y-auto pr-2 no-scrollbar">
 
+      {/* CREATE BOARD BLOCK */}
       {showCreate && (
         <CreateBoardBlock
           onCreate={handleCreateBoard}
@@ -36,9 +58,9 @@ const Workspace = ({ selectedBoards = [], onRemoveBoard }) => {
         />
       )}
 
+      {/* BOARDS */}
       {selectedBoards.length > 0 && (
         <div className="flex flex-col gap-4 w-full h-full">
-
           {selectedBoards.map((board) => (
             <div key={board._id} className="w-full max-w-full h-full">
               <BoardBlock
@@ -47,10 +69,10 @@ const Workspace = ({ selectedBoards = [], onRemoveBoard }) => {
               />
             </div>
           ))}
-
         </div>
       )}
 
+      {/* EMPTY STATE */}
       {!showCreate && selectedBoards.length === 0 && (
         <div className="flex-1 flex items-center justify-center">
           <p className="text-sm text-[#1e1b4b] opacity-70">

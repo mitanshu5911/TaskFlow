@@ -1,25 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { getBoards } from "../../services/boardService";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 
-const Sidebar = ({ onSelectBoard }) => {
-  const [boards, setBoards] = useState([]);
+const Sidebar = ({ boards = [], onSelectBoard }) => {
   const [activeBoardId, setActiveBoardId] = useState(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchBoards();
-  }, []);
-
-  const fetchBoards = async () => {
-    try {
-      const data = await getBoards();
-      setBoards(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleSelect = (board) => {
     setActiveBoardId(board._id);
@@ -44,30 +29,34 @@ const Sidebar = ({ onSelectBoard }) => {
       {/* BOARD LIST */}
       <div className="flex-1 flex flex-col gap-1 pr-1">
 
-        {visibleBoards.map((board) => (
-          <button
-            key={board._id}
-            onClick={() => handleSelect(board)}
-            className={`group relative text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 flex items-center justify-between
-              
-              ${
-                activeBoardId === board._id
-                  ? "bg-[#ddd6fe] text-[#5b21b6] font-medium shadow-sm"
-                  : "text-[#1e1b4b] hover:bg-[#ede9fe]"
-              }
-            `}
-          >
-            {/* TITLE */}
-            <span className="truncate">{board.title}</span>
+        {visibleBoards.length > 0 ? (
+          visibleBoards.map((board) => (
+            <button
+              key={board._id}
+              onClick={() => handleSelect(board)}
+              className={`group relative text-left px-3 py-2 rounded-lg text-sm transition-all duration-200 flex items-center justify-between
+                ${
+                  activeBoardId === board._id
+                    ? "bg-[#ddd6fe] text-[#5b21b6] font-medium shadow-sm"
+                    : "text-[#1e1b4b] hover:bg-[#ede9fe]"
+                }
+              `}
+            >
+              <span className="truncate">{board.title}</span>
 
-            <div className="w-5 flex justify-end">
-              <ArrowRight
-                size={16} 
-                className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-[#7c3aed] translate-x-1 group-hover:translate-x-0"
-              />
-            </div>
-          </button>
-        ))}
+              <div className="w-5 flex justify-end">
+                <ArrowRight
+                  size={16}
+                  className="opacity-0 group-hover:opacity-100 transition-all duration-200 text-[#7c3aed] translate-x-1 group-hover:translate-x-0"
+                />
+              </div>
+            </button>
+          ))
+        ) : (
+          <p className="text-xs text-[#1e1b4b]/60 px-2">
+            No boards yet
+          </p>
+        )}
 
       </div>
 
