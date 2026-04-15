@@ -44,3 +44,10 @@ export const getFilteredCards = async (listId, filters) => {
 
   return res.data;
 };
+
+
+
+export const searchCards = async (query) => {
+  const res = await api.get(`/cards/search?query=${query}`);
+  return res.data;
+};

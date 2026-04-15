@@ -102,101 +102,94 @@ export const updateCard = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 🔥 VALIDATE CARD ID
+    // ✅ VALIDATE ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         message: "Invalid card ID",
       });
     }
 
-    const allowedUpdates = [
-      "title",
-      "description",
-      "labels",
-      "members",
-      "dueDate",
-      "attachments",
-      "isCompleted",
-    ];
-
     const updates = {};
 
-    allowedUpdates.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    });
-
-    if (updates.title !== undefined) {
-      if (!updates.title.trim()) {
+    // ✅ TITLE
+    if (req.body.title !== undefined) {
+      const title = req.body.title?.trim();
+      if (!title) {
         return res.status(400).json({
           message: "Title cannot be empty",
         });
       }
-      updates.title = updates.title.trim();
+      updates.title = title;
     }
 
-    if (updates.description !== undefined) {
-      updates.description = updates.description.trim();
+    // ✅ DESCRIPTION
+    if (req.body.description !== undefined) {
+      updates.description = req.body.description?.trim() || "";
     }
 
-    if (updates.dueDate !== undefined) {
-      const date = new Date(updates.dueDate);
-      if (isNaN(date.getTime())) {
-        return res.status(400).json({
-          message: "Invalid due date",
-        });
+    // ✅ DUE DATE (SAFE HANDLING)
+    if (req.body.dueDate !== undefined) {
+      if (!req.body.dueDate) {
+        updates.dueDate = null; // allow clearing date
+      } else {
+        const date = new Date(req.body.dueDate);
+        if (!isNaN(date.getTime())) {
+          updates.dueDate = date;
+        }
       }
-      updates.dueDate = date;
     }
 
-    if (updates.labels !== undefined) {
-      if (!Array.isArray(updates.labels)) {
-        return res.status(400).json({
-          message: "Labels must be an array",
-        });
+    // ✅ LABELS
+    if (req.body.labels !== undefined) {
+      if (Array.isArray(req.body.labels)) {
+        updates.labels = req.body.labels.map((label) => ({
+          name: label?.name?.trim() || "Label",
+          color: label?.color || "#7c3aed",
+        }));
       }
-
-      updates.labels = updates.labels.map((label) => ({
-        name: label.name?.trim() || "Label",
-        color: label.color || "#7c3aed",
-      }));
     }
 
-    if (updates.members !== undefined) {
-      if (!Array.isArray(updates.members)) {
-        return res.status(400).json({
-          message: "Members must be an array",
-        });
+    // ✅ MEMBERS (EMAIL → USER ID)
+    if (req.body.members !== undefined) {
+      if (Array.isArray(req.body.members) && req.body.members.length > 0) {
+        const users = await User.find({
+          email: { $in: req.body.members },
+        }).select("_id");
+
+        updates.members = users.map((u) => u._id);
+      } else {
+        updates.members = []; // allow clearing members
       }
-
-      const users = await User.find({
-        email: { $in: updates.members },
-      }).select("_id email");
-
-      const userIds = users.map((u) => u._id);
-
-      updates.members = [...new Set(userIds)]; 
     }
 
-    if (updates.attachments !== undefined) {
-      if (!Array.isArray(updates.attachments)) {
-        return res.status(400).json({
-          message: "Attachments must be an array",
-        });
+    // ✅ ATTACHMENTS
+    if (req.body.attachments !== undefined) {
+      if (Array.isArray(req.body.attachments)) {
+        updates.attachments = req.body.attachments.map((a) => ({
+          fileName: a?.fileName || "file",
+          fileUrl: a?.fileUrl,
+          uploadedAt: a?.uploadedAt || new Date(),
+        }));
       }
-
-      updates.attachments = updates.attachments.map((a) => ({
-        fileName: a.fileName || "file",
-        fileUrl: a.fileUrl,
-        uploadedAt: a.uploadedAt || new Date(),
-      }));
     }
 
+    // ✅ STATUS
+    if (req.body.isCompleted !== undefined) {
+      updates.isCompleted = Boolean(req.body.isCompleted);
+    }
+
+    // 🔥 NO UPDATE CASE
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        message: "No valid fields provided for update",
+      });
+    }
+
+    // ✅ UPDATE
     const card = await Card.findByIdAndUpdate(id, updates, {
       new: true,
       runValidators: true,
-    }).populate("members", "email name"); 
+    }).populate("members", "email name");
 
     if (!card) {
       return res.status(404).json({
@@ -378,5 +371,46 @@ export const deleteCard = async (req, res) => {
     res.json({ message: "Card deleted permanently" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+
+export const searchCards = async (req, res) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || !query.trim()) {
+      return res.status(400).json({
+        message: "Search query is required",
+      });
+    }
+
+    const cards = await Card.find({
+      title: { $regex: query, $options: "i" },
+      isArchived: false,
+    })
+      .populate({
+        path: "list",
+        select: "title board",
+        populate: {
+          path: "board",
+          select: "title",
+        },
+      })
+      .limit(10); // 🔥 limit for performance
+
+    const results = cards.map((card) => ({
+      _id: card._id,
+      title: card.title,
+      listName: card.list?.title,
+      boardName: card.list?.board?.title,
+      card, // full card for modal
+    }));
+
+    res.json(results);
+
+  } catch (err) {
+    console.error("Search Error:", err);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -45,18 +45,51 @@ const CardModal = ({ card, onClose, onUpdate }) => {
 
   if (!card) return null;
 
-  const handleSave = async () => {
-    try {
-      setLoading(true);
-      const updated = await updateCard(card._id, form);
-      onUpdate && onUpdate(updated);
-      onClose();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+const handleSave = async () => {
+  try {
+    setLoading(true);
+
+    // ✅ CLEAN PAYLOAD (IMPORTANT)
+    const payload = {};
+
+    if (form.title) payload.title = form.title;
+    if (form.description !== undefined) payload.description = form.description;
+
+    // ✅ handle dueDate properly
+    if (form.dueDate !== undefined) {
+      payload.dueDate = form.dueDate || null;
     }
-  };
+
+    // ✅ labels
+    if (form.labels?.length >= 0) {
+      payload.labels = form.labels;
+    }
+
+    // ✅ members (emails)
+    if (form.members?.length >= 0) {
+      payload.members = form.members.filter((m) => m.includes("@"));
+    }
+
+    // ✅ attachments
+    if (form.attachments?.length >= 0) {
+      payload.attachments = form.attachments;
+    }
+
+    // ✅ status
+    payload.isCompleted = form.isCompleted;
+
+    console.log("UPDATE PAYLOAD:", payload); // 🔥 DEBUG
+
+    const updated = await updateCard(card._id, payload);
+
+    onUpdate && onUpdate(updated);
+    onClose();
+  } catch (err) {
+    console.error("SAVE ERROR:", err.response?.data || err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const addMember = () => {
     if (!memberInput.trim()) return;

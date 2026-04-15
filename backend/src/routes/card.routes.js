@@ -8,7 +8,8 @@ import {
   addAttachment,
   toggleCardComplete,
   deleteCard,
-  getFilteredCards
+  getFilteredCards,
+  searchCards,
 } from "../controllers/card.controller.js";
 
 const router = express.Router();
@@ -21,6 +22,9 @@ router.put("/:id", updateCard);
 
 router.delete("/:id", deleteCard);              // permanent delete
 router.patch("/:id/archive", archiveCard);
+// routes/card.routes.js
+
+router.get("/search", searchCards);
 
 router.patch("/:id/move", moveCard);
 

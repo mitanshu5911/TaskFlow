@@ -159,16 +159,7 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
               Open Card
             </button>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(card);
-                setMenuOpen(false);
-              }}
-              className="menu-item"
-            >
-              <Pencil size={14} /> Edit
-            </button>
+           
 
             <button
               onClick={handleDelete}
