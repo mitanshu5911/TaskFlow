@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { MoreHorizontal, Pencil, Trash2, Archive, Check } from "lucide-react";
 import { archiveCard, deleteCard, toggleCardComplete } from "../../services/cardService";
 
-const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
+const Card = ({ card, onDelete, onEdit, onOpen, onUpdate, onDrop }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
   const [completed, setCompleted] = useState(card.isCompleted || false);
@@ -11,6 +11,11 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
 
   const menuRef = useRef();
   const buttonRef = useRef();
+
+  // 🔥 FIX: ensure completed stays in sync if parent updates
+  useEffect(() => {
+    setCompleted(card.isCompleted || false);
+  }, [card.isCompleted]);
 
   // ✅ Close dropdown on outside click
   useEffect(() => {
@@ -52,7 +57,6 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
 
     try {
       await deleteCard(card._id);
-
       onDelete && onDelete(card._id);
     } catch (err) {
       console.error(err);
@@ -68,7 +72,6 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
       const updated = await archiveCard(card._id);
 
       onDelete && onDelete(card._id);
-
       onUpdate && onUpdate(updated);
     } catch (err) {
       console.error(err);
@@ -79,6 +82,30 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
 
   return (
     <div
+      draggable
+      onDragStart={(e) => {
+        e.stopPropagation();
+
+        // 🔥 FIX: ensure correct list id
+        const sourceListId = typeof card.list === "object"
+          ? card.list._id
+          : card.list;
+
+        e.dataTransfer.setData("cardId", card._id);
+        e.dataTransfer.setData("sourceListId", sourceListId);
+
+        // 🔥 drag effect
+        e.currentTarget.classList.add("opacity-50", "scale-95");
+      }}
+      onDragEnd={(e) => {
+        // 🔥 CLEANUP
+        e.currentTarget.classList.remove("opacity-50", "scale-95");
+      }}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => {
+        e.preventDefault();
+        onDrop && onDrop(card._id, e);
+      }}
       onClick={() => onOpen(card)}
       className={`relative group rounded-xl p-3 shadow-sm border cursor-pointer
         transition-all duration-200
@@ -159,8 +186,6 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
               Open Card
             </button>
 
-           
-
             <button
               onClick={handleDelete}
               className="menu-item text-red-500 hover:bg-red-50"
@@ -175,7 +200,7 @@ const Card = ({ card, onDelete, onEdit, onOpen, onUpdate }) => {
               <Archive size={14} /> Archive
             </button>
           </div>,
-          document.getElementById("portal-root"),
+          document.getElementById("portal-root")
         )}
     </div>
   );

@@ -232,77 +232,119 @@ export const archiveCard = async (req, res) => {
   }
 };
 
-
-
-// ✅ MOVE CARD (FIXED 🔥)
 export const moveCard = async (req, res) => {
   try {
-    const { sourceListId, destinationListId, sourceIndex, destinationIndex } =
-      req.body;
+    const { id } = req.params;
+    const {
+      sourceListId,
+      destinationListId,
+      sourceIndex,
+      destinationIndex,
+    } = req.body;
 
-    const cardId = req.params.id;
-
-    // ✅ Ensure correct card
-    const movedCard = await Card.findById(cardId);
-    if (!movedCard) {
-      return res.status(404).json({ message: "Card not found" });
+    // ✅ VALIDATION
+    if (
+      !mongoose.Types.ObjectId.isValid(id) ||
+      !mongoose.Types.ObjectId.isValid(sourceListId) ||
+      !mongoose.Types.ObjectId.isValid(destinationListId)
+    ) {
+      return res.status(400).json({
+        message: "Invalid IDs",
+      });
     }
 
-    // STEP 1: Get source cards
+    if (
+      sourceIndex === undefined ||
+      destinationIndex === undefined
+    ) {
+      return res.status(400).json({
+        message: "Indexes are required",
+      });
+    }
+
+    // ✅ FIND CARD
+    const movedCard = await Card.findById(id);
+    if (!movedCard) {
+      return res.status(404).json({
+        message: "Card not found",
+      });
+    }
+
+    // 🔥 SAME LIST CASE
+    if (sourceListId === destinationListId) {
+      const cards = await Card.find({
+        list: sourceListId,
+        isArchived: false,
+      }).sort({ order: 1 });
+
+      const updated = [...cards];
+
+      const [removed] = updated.splice(sourceIndex, 1);
+      updated.splice(destinationIndex, 0, removed);
+
+      // ✅ UPDATE ORDER
+      await Promise.all(
+        updated.map((card, index) =>
+          Card.findByIdAndUpdate(card._id, { order: index })
+        )
+      );
+
+      return res.json({
+        message: "Card reordered successfully",
+      });
+    }
+
+    // 🔥 DIFFERENT LIST CASE
+
+    // SOURCE LIST
     const sourceCards = await Card.find({
       list: sourceListId,
       isArchived: false,
     }).sort({ order: 1 });
 
-    // Remove card from source
     const updatedSource = sourceCards.filter(
-      (c) => c._id.toString() !== cardId
+      (c) => c._id.toString() !== id
     );
 
-    // SAME LIST (reorder)
-    if (sourceListId === destinationListId) {
-      updatedSource.splice(destinationIndex, 0, movedCard);
-
-      await Promise.all(
-        updatedSource.map((card, index) =>
-          Card.findByIdAndUpdate(card._id, { order: index + 1 })
-        )
-      );
-
-      return res.json({ message: "Card reordered" });
-    }
-
-    // DIFFERENT LIST
-
-    // STEP 2: Destination cards
+    // DESTINATION LIST
     const destinationCards = await Card.find({
       list: destinationListId,
       isArchived: false,
     }).sort({ order: 1 });
 
-    destinationCards.splice(destinationIndex, 0, movedCard);
+    const updatedDestination = [...destinationCards];
 
-    // Update moved card's list
+    updatedDestination.splice(destinationIndex, 0, movedCard);
+
+    // ✅ UPDATE MOVED CARD LIST
     movedCard.list = destinationListId;
     await movedCard.save();
 
-    // Update destination orders
+    // ✅ UPDATE DESTINATION ORDER
     await Promise.all(
-      destinationCards.map((card, index) =>
-        Card.findByIdAndUpdate(card._id, { order: index + 1 })
+      updatedDestination.map((card, index) =>
+        Card.findByIdAndUpdate(card._id, { order: index })
       )
     );
 
-    
+    // ✅ UPDATE SOURCE ORDER
     await Promise.all(
       updatedSource.map((card, index) =>
-        Card.findByIdAndUpdate(card._id, { order: index + 1 })
+        Card.findByIdAndUpdate(card._id, { order: index })
       )
     );
 
-    res.json({ message: "Card moved successfully" });
+    res.json({
+      message: "Card moved successfully",
+    });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Move Card Error:", err);
+
+    res.status(500).json({
+      message: "Internal server error",
+      error: err.message,
+    });
   }
 };
 

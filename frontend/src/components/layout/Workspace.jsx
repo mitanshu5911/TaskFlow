@@ -37,10 +37,10 @@ const Workspace = ({ selectedBoards = [], onRemoveBoard }) => {
       )}
 
       {selectedBoards.length > 0 && (
-        <div className="flex flex-col gap-4 w-full">
+        <div className="flex flex-col gap-4 w-full h-full">
 
           {selectedBoards.map((board) => (
-            <div key={board._id} className="w-full max-w-full">
+            <div key={board._id} className="w-full max-w-full h-full">
               <BoardBlock
                 board={board}
                 onRemove={onRemoveBoard}

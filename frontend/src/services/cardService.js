@@ -51,3 +51,29 @@ export const searchCards = async (query) => {
   const res = await api.get(`/cards/search?query=${query}`);
   return res.data;
 };
+
+
+
+export const moveCard = async (
+  cardId,
+  {
+    sourceListId,
+    destinationListId,
+    sourceIndex,
+    destinationIndex,
+  }
+) => {
+  try {
+    const res = await api.patch(`/cards/${cardId}/move`, {
+      sourceListId,
+      destinationListId,
+      sourceIndex,
+      destinationIndex,
+    });
+
+    return res.data;
+  } catch (err) {
+    console.error("Move Card Error:", err?.response?.data || err.message);
+    throw err;
+  }
+};
