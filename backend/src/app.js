@@ -6,7 +6,11 @@ import listRoutes from "./routes/list.routes.js";
 import cardRoutes from "./routes/card.routes.js";
 
 const app = express();
-app.use(cors());
+const url = process.env.FRONTEND_URL
+app.use(cors({
+origin: url,
+  credentials: true
+}));
 
 app.use(express.json());
 
