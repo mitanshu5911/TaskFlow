@@ -3,8 +3,8 @@ import { MoreHorizontal, Pencil, Trash2, Check, X, Filter } from "lucide-react";
 import AddCardBlock from "./AddCardBlock";
 import { createCard, getFilteredCards } from "../../services/cardService";
 import { updateList } from "../../services/listService";
-import Card from "./Card";
 import CardModal from "./CardModal";
+import Card from "./Card";
 
 const LABELS = [
   { name: "Feature", color: "#7c3aed" },
