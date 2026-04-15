@@ -1,5 +1,6 @@
 import List from "../models/List.js";
 import Card from "../models/Card.js";
+import User from "../models/User.js";
 
 export const createList = async (req, res) => {
   try {
@@ -72,3 +73,6 @@ export const getListsByBoard = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+

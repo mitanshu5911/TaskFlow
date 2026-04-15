@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { X, Settings } from "lucide-react";
-import { createList, getListsByBoard, deleteList } from "../../../services/listService";
+import {
+  createList,
+  getListsByBoard,
+  deleteList,
+} from "../../../services/listService";
 import List from "../../board/List";
 import AddListBlock from "../../board/AddListBlock";
 
@@ -36,7 +40,6 @@ const BoardBlock = ({ board, onRemove }) => {
   const handleDeleteList = async (listId) => {
     try {
       await deleteList(listId);
-
       setLists((prev) => prev.filter((l) => l._id !== listId));
     } catch (err) {
       console.error(err);
@@ -44,43 +47,54 @@ const BoardBlock = ({ board, onRemove }) => {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-md border border-[#ede9fe] flex flex-col">
+    <div className="w-full bg-white rounded-2xl shadow-md border border-[#ede9fe] flex flex-col relative overflow-visible">
 
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#ede9fe]">
+      {/* HEADER */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#ede9fe] sticky top-0 bg-white z-10 rounded-t-2xl">
         <h2 className="text-lg font-semibold text-[#1e1b4b] truncate">
           {board.title}
         </h2>
 
         <div className="flex gap-2">
-          <button className="p-2 hover:bg-[#ede9fe] rounded-md">
+          <button className="p-2 hover:bg-[#ede9fe] rounded-md transition">
             <Settings size={18} className="text-[#7c3aed]" />
           </button>
 
           <button
             onClick={() => onRemove(board._id)}
-            className="p-2 hover:bg-red-100 rounded-md"
+            className="p-2 hover:bg-red-100 rounded-md transition"
           >
             <X size={18} className="text-red-500" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto overflow-y-visible no-scrollbar">
-        <div className="flex gap-4 p-4 min-w-max">
+      {/* LIST CONTAINER */}
+      <div className="flex-1 overflow-x-auto overflow-y-visible no-scrollbar relative">
+
+        {/* IMPORTANT: gap + padding + min-width */}
+        <div className="flex items-start gap-4 p-4 min-w-max">
 
           {lists.map((list) => (
             <List
               key={list._id}
               list={list}
               onDelete={handleDeleteList}
+              onUpdate={(updatedList) => {
+                setLists((prev) =>
+                  prev.map((l) =>
+                    l._id === updatedList._id ? updatedList : l
+                  )
+                );
+              }}
             />
           ))}
 
+          {/* ADD LIST */}
           <AddListBlock onCreate={handleCreateList} />
 
         </div>
       </div>
-
     </div>
   );
 };

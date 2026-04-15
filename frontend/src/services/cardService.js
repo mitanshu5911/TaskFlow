@@ -35,3 +35,12 @@ export const archiveCard = async (cardId) => {
   const res = await api.patch(`/cards/${cardId}/archive`);
   return res.data;
 };
+
+
+export const getFilteredCards = async (listId, filters) => {
+  const query = new URLSearchParams(filters).toString();
+
+  const res = await api.get(`/cards/list/${listId}/filter?${query}`);
+
+  return res.data;
+};

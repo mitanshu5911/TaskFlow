@@ -35,6 +35,67 @@ export const createCard = async (req, res) => {
 
 
 
+export const getFilteredCards = async (req, res) => {
+  try {
+    const { listId } = req.params;
+
+    const {
+      labels,
+      members,
+      isCompleted,
+      dueDate,
+    } = req.query;
+
+    const query = {
+      list: listId,
+      isArchived: false,
+    };
+
+    if (isCompleted !== undefined) {
+      query.isCompleted = isCompleted === "true";
+    }
+
+    if (labels) {
+      const labelArray = labels.split(","); 
+      query["labels.name"] = { $in: labelArray };
+    }
+
+    if (members) {
+      const emails = members.split(",");
+
+      const users = await User.find({
+        email: { $in: emails },
+      }).select("_id");
+
+      const userIds = users.map((u) => u._id);
+
+      query.members = { $in: userIds };
+    }
+
+    if (dueDate) {
+      const date = new Date(dueDate);
+
+      query.dueDate = {
+        $gte: new Date(date.setHours(0, 0, 0, 0)),
+        $lte: new Date(date.setHours(23, 59, 59, 999)),
+      };
+    }
+
+    const cards = await Card.find(query)
+      .populate("members", "email name")
+      .sort({ order: 1 });
+
+    res.json(cards);
+
+  } catch (err) {
+    console.error("Filter Cards Error:", err);
+
+    res.status(500).json({
+      message: "Failed to fetch filtered cards",
+      error: err.message,
+    });
+  }
+};
 
 
 export const updateCard = async (req, res) => {

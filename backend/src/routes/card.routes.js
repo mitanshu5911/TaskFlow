@@ -8,6 +8,7 @@ import {
   addAttachment,
   toggleCardComplete,
   deleteCard,
+  getFilteredCards
 } from "../controllers/card.controller.js";
 
 const router = express.Router();
@@ -29,4 +30,5 @@ router.post("/:id/attachment", addAttachment);
 
 router.patch("/:id/toggle-complete", toggleCardComplete);
 
+router.get("/list/:listId/filter", getFilteredCards);
 export default router;
