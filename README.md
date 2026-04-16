@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="./frontend/public/Logo.png" alt="TaskDeck Logo" width="180"/>
+  <img src="./frontend/public/Logo.png" alt="TaskFlow Logo" width="180"/>
 </p>
 
 <!-- <h2>Project Management Tool</h2> -->
@@ -10,7 +10,7 @@
 </p>
 
 <p align="left">
-  TaskDeck is designed to streamline workflow management through an intuitive drag-and-drop interface, 
+  TaskFlow is designed to streamline workflow management through an intuitive drag-and-drop interface, 
   enabling users to organize tasks across boards, lists, and cards with complete flexibility.
 </p>
 
@@ -25,7 +25,7 @@
 <br/>
 
 <p align="left">
-  ✨ <b>Why TaskDeck?</b><br/>
+  ✨ <b>Why TaskFlow?</b><br/>
   → Simplifies project tracking with a clean and responsive UI<br/>
   → Enables real-time task organization with smooth drag & drop<br/>
   → Provides powerful card-level customization (labels, due dates, members)<br/>
@@ -84,7 +84,7 @@
 ## 🖥️ Application Overview
 
 <p align="center">
-  <img src="./frontend/public/FrontPage.png" alt="TaskDeck Front Page" width="100%"/>
+  <img src="./frontend/public/FrontPage.png" alt="TaskFlow Front Page" width="100%"/>
 </p>
 
 
@@ -113,7 +113,7 @@ To start managing your tasks, you first need to create a board.
 <br/>
 
 <p align="center">
-  <img src="./frontend/public/CreateBoard.png" alt="TaskDeck Front Page" width="100%"/>
+  <img src="./frontend/public/CreateBoard.png" alt="TaskFlow Front Page" width="100%"/>
 </p>
 
 
@@ -239,7 +239,7 @@ Each list includes a built-in filtering feature to quickly find relevant tasks.
 
 ## 🗂️ Multiple Board Management
 
-TaskDeck allows users to work with **multiple boards simultaneously**, improving productivity and multitasking.
+TaskFlow allows users to work with **multiple boards simultaneously**, improving productivity and multitasking.
 
 ### 🔄 Switching Between Boards
 
@@ -266,7 +266,7 @@ TaskDeck allows users to work with **multiple boards simultaneously**, improving
 
 ## 🔍 Global Search Functionality
 
-TaskDeck provides a powerful **global search feature** to quickly locate cards across all boards.
+TaskFlow provides a powerful **global search feature** to quickly locate cards across all boards.
 
 ### 🔎 How Search Works
 
@@ -296,7 +296,7 @@ This helps users easily identify where the card belongs.
 
 ## 🔄 Drag & Drop Functionality
 
-TaskDeck implements a fast and intuitive **drag-and-drop system** that allows users to manage tasks seamlessly across lists.
+TaskFlow implements a fast and intuitive **drag-and-drop system** that allows users to manage tasks seamlessly across lists.
 
 ### 🧭 Supported Interactions
 
