@@ -29,7 +29,7 @@ const LargeDesktop = () => {
           </div>
 
           <h1 className="text-2xl font-bold text-[#1e1b4b] tracking-tight">
-            Task<span className="text-[#7c3aed]">Deck</span>
+            Task<span className="text-[#7c3aed]">Flow</span>
           </h1>
         </div>
 
